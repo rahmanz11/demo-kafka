@@ -1,5 +1,9 @@
 package alpha.kafka.demo.payload;
 
+import alpha.kafka.demo.config.LocalDateTimeSerializer;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -8,6 +12,8 @@ public class FundsReceipt implements Serializable {
     private String from;
     private String to;
     private Double fundAmt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime fundsTransferredTime;
 
     public FundsReceipt() {}

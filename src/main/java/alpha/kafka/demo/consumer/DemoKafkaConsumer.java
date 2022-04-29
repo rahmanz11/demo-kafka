@@ -4,8 +4,6 @@ import alpha.kafka.demo.payload.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.kafka.clients.consumer.*;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,7 +16,6 @@ public class DemoKafkaConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(DemoKafkaConsumer.class);
     Properties properties = new Properties();
-    // Create Kafka producer
     KafkaConsumer<String, String> consumer;
     Gson gson;
 
@@ -45,7 +42,7 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    logger.debug("----- order value = {}", record.key(), record.value());
+                    logger.debug("----- paid-order value = {}", record.value());
                     try {
                         Order order = gson.fromJson(record.value(), Order.class);
                         orders.add(order);
@@ -75,7 +72,7 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    logger.debug("----- matched-order value = {}", record.key(), record.value());
+                    logger.debug("----- paid-order value = {}", record.value());
                     try {
                         MatchedOrder matchedOrder = gson.fromJson(record.value(), MatchedOrder.class);
                         matchedOrders.add(matchedOrder);
@@ -105,7 +102,7 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    logger.debug("----- paid-order value = {}", record.key(), record.value());
+                    logger.debug("----- paid-order value = {}", record.value());
                     try {
                         PaidOrder paidOrder = gson.fromJson(record.value(), PaidOrder.class);
                         paidOrders.add(paidOrder);
@@ -135,7 +132,7 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    logger.debug("----- delivered-order value = {}", record.key(), record.value());
+                    logger.debug("----- paid-order value = {}", record.value());
                     try {
                         DeliveredOrder deliveredOrder = gson.fromJson(record.value(), DeliveredOrder.class);
                         deliveredOrders.add(deliveredOrder);
@@ -165,7 +162,7 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    logger.debug("----- receipt value = {}", record.key(), record.value());
+                    logger.debug("----- paid-order value = {}", record.value());
                     try {
                         Receipt receipt = gson.fromJson(record.value(), Receipt.class);
                         receipts.add(receipt);
