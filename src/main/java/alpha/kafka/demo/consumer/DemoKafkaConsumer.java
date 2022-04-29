@@ -45,8 +45,13 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    Order order = gson.fromJson(record.value(), Order.class);
-                    orders.add(order);
+                    logger.debug("----- order value = {}", record.key(), record.value());
+                    try {
+                        Order order = gson.fromJson(record.value(), Order.class);
+                        orders.add(order);
+                    } catch (Throwable t) {
+                        continue;
+                    }
                 }
             }
         } finally {
@@ -70,8 +75,13 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    MatchedOrder matchedOrder = gson.fromJson(record.value(), MatchedOrder.class);
-                    matchedOrders.add(matchedOrder);
+                    logger.debug("----- matched-order value = {}", record.key(), record.value());
+                    try {
+                        MatchedOrder matchedOrder = gson.fromJson(record.value(), MatchedOrder.class);
+                        matchedOrders.add(matchedOrder);
+                    } catch (Throwable t) {
+                        continue;
+                    }
                 }
             }
         } finally {
@@ -95,8 +105,13 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    PaidOrder paidOrder = gson.fromJson(record.value(), PaidOrder.class);
-                    paidOrders.add(paidOrder);
+                    logger.debug("----- paid-order value = {}", record.key(), record.value());
+                    try {
+                        PaidOrder paidOrder = gson.fromJson(record.value(), PaidOrder.class);
+                        paidOrders.add(paidOrder);
+                    } catch (Throwable t) {
+                        continue;
+                    }
                 }
             }
         } finally {
@@ -120,8 +135,13 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    DeliveredOrder deliveredOrder = gson.fromJson(record.value(), DeliveredOrder.class);
-                    deliveredOrders.add(deliveredOrder);
+                    logger.debug("----- delivered-order value = {}", record.key(), record.value());
+                    try {
+                        DeliveredOrder deliveredOrder = gson.fromJson(record.value(), DeliveredOrder.class);
+                        deliveredOrders.add(deliveredOrder);
+                    } catch (Throwable t) {
+                        continue;
+                    }
                 }
             }
         } finally {
@@ -145,8 +165,13 @@ public class DemoKafkaConsumer {
             for (int i = 0; i < 5; i++) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
                 for (ConsumerRecord<String, String> record : records) {
-                    Receipt receipt = gson.fromJson(record.value(), Receipt.class);
-                    receipts.add(receipt);
+                    logger.debug("----- receipt value = {}", record.key(), record.value());
+                    try {
+                        Receipt receipt = gson.fromJson(record.value(), Receipt.class);
+                        receipts.add(receipt);
+                    } catch (Throwable t) {
+                        continue;
+                    }
                 }
             }
         } finally {
