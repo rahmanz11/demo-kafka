@@ -1,7 +1,7 @@
 Steps
 =====
 [1. Login as root]
-
+------------------
 [2. Install dependencies]
 
 apt-get update -y
