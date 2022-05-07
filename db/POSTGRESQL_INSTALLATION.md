@@ -125,7 +125,7 @@ cd /p01/pgsql/14.2/dbs/data/
 vi pg_hba.conf
 
 25. In the below there is a table with following headers:
-# TYPE  DATABASE        USER            ADDRESS                 METHOD
+	TYPE  DATABASE        USER            ADDRESS                 METHOD
 Go there and set all "trust" to "md5" under METHOD column
 
 26. Now start database with following command
