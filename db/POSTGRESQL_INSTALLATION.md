@@ -1,8 +1,8 @@
 Steps
 =====
-[1. Login as root]
-------------------
-[2. Install dependencies]
+1. Login as root
+
+2. Install dependencies
 
 apt-get update -y
 apt-get install libncurses5-dev libncursesw5-dev
@@ -12,12 +12,12 @@ apt install linux-headers-$(uname -r)
 apt-get install zlib1g-dev
 apt install zlib1g
 
-[3. Add postgres system user]
+3. Add postgres system user
 
 adduser postgres
 Password: psql
 
-[4. Create following directories to install postgres binary]
+4. Create following directories to install postgres binary
 
 mkdir -p /p01/pgsql/14.2/dbs/data
 mkdir -p /p01/pgsql/diag/trace
