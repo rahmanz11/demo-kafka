@@ -6,7 +6,7 @@ create table order_info(
 	_from VARCHAR(255),
 	_to VARCHAR(255),
 	pmt_method VARCHAR(255),
-	updated BOOLEAN DEFAULT false,
+	matched BOOLEAN DEFAULT false,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

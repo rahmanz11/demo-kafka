@@ -33,6 +33,7 @@ type MatchedOrder struct {
 }
 
 func main() {
+	// initialize kafka connection and reader
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{"localhost:9092"},
 		GroupID:   "order-group",
@@ -46,6 +47,7 @@ func main() {
 
 		ctx := context.Background()
 
+		// run infinitely and fetch messages when available
 		for {
 			m, err := r.FetchMessage(ctx)
 			if err != nil {
@@ -54,8 +56,10 @@ func main() {
 			}
 
 			var data Order
+			// unmarshal json string to type data
 			json.Unmarshal(m.Value, &data)
 
+			// database connection string
 			connStr := "postgresql://micros:micro$@localhost:5432/order_db?sslmode=disable"
 
 			db, connerr := sql.Open("postgres", connStr)
@@ -71,14 +75,18 @@ func main() {
 					fmt.Printf("error while inserting data into order_info table %s\n", inserr)
 				} else {
 					fmt.Println("New order record ID is:", newId)
+
+					// when insertion is successful, there will be a valid id
 					if newId > 0 {
 						matched := false
 
 						if data.OrderType != "" && data.OrderType == "buy" {
+							// go match incoming "buy" data
 							matched = match(data, db)
 						}
 
 						if matched {
+							// match successful then do kafka commit
 							if comerr := r.CommitMessages(ctx, m); err != nil {
 								fmt.Printf("failed to commit order messages: %s\n", comerr)
 							} else {
@@ -92,12 +100,13 @@ func main() {
 	}
 }
 
+// the match function
 func match(data Order, db *sql.DB) bool {
 	var id int
 	var orderId string
 	var from string
 
-	updated := false
+	success := false
 
 	sqlStatement := `SELECT id, order_id, _from FROM order_info WHERE order_type = $1 AND amt = $2 ORDER BY created_at DESC LIMIT 1;`
 	row := db.QueryRow(sqlStatement, "sell", data.Amt)
@@ -114,7 +123,6 @@ func match(data Order, db *sql.DB) bool {
 		if err != nil {
 			fmt.Printf("error while updating order record %s\n", err)
 		} else {
-			updated = true
 			fmt.Println("order record updated, id:")
 			fmt.Println(id)
 		}
@@ -138,8 +146,8 @@ func match(data Order, db *sql.DB) bool {
 
 		body, _ := json.Marshal(&matchOrder)
 
-		response, err := http.Post("http://localhost:89/api/v2/match-order", "application/json", bytes.NewBuffer(body))
-
+		// save match order data in database by calling the POST API for match order
+		response, err := http.Post("http://188.166.32.136:90/api/v2/match-order", "application/json", bytes.NewBuffer(body))
 		if err != nil {
 			fmt.Printf("cannot send match-order api request %s\n", err.Error())
 		}
@@ -147,11 +155,13 @@ func match(data Order, db *sql.DB) bool {
 		responseData, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			fmt.Printf("error while posting match-order to api: %s\n", err)
+			success = true
+		} else {
+			json.MarshalIndent(responseData, "", "\t")
 		}
-		fmt.Println(json.MarshalIndent(responseData, "", "\t"))
 	default:
 		fmt.Printf("error while opening db con %s\n", err)
 	}
 
-	return updated
+	return success
 }

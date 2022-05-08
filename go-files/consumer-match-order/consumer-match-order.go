@@ -21,6 +21,7 @@ type MatchedOrder struct {
 }
 
 func main() {
+	// initialize kafka connection and reader
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{"localhost:9092"},
 		GroupID:   "match-order-group",
@@ -34,6 +35,7 @@ func main() {
 
 		ctx := context.Background()
 
+		// run infinitely and fetch messages when available
 		for {
 			m, err := r.FetchMessage(ctx)
 			if err != nil {
@@ -42,8 +44,10 @@ func main() {
 			}
 
 			var data MatchedOrder
+			// unmarshal json string to type data
 			json.Unmarshal(m.Value, &data)
 
+			// database connection string
 			connStr := "postgresql://micros:micro$@localhost:5432/match_order_db?sslmode=disable"
 
 			db, connerr := sql.Open("postgres", connStr)
@@ -59,8 +63,9 @@ func main() {
 					fmt.Printf("error while inserting data into match_order_info table %s\n", inserr)
 				} else {
 					fmt.Println("New match-order record ID is:", newId)
-
+					// when insertion is successful, there will be a valid id
 					if newId > 0 {
+						// kafka commit
 						if comerr := r.CommitMessages(ctx, m); err != nil {
 							fmt.Printf("failed to commit match-order messages: %s\n", comerr)
 						} else {

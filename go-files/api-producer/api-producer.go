@@ -4,10 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+
+	// for printing logs
 	"fmt"
+
+	// for http usage
 	"net/http"
 
+	// for gin framework
 	"github.com/gin-gonic/gin"
+
+	// for postgres library
+	_ "github.com/lib/pq"
+
+	// for kafka go library
 	"github.com/segmentio/kafka-go"
 )
 
@@ -30,14 +40,22 @@ type MatchedOrder struct {
 	SellOrderId string `json:"sellOrderId"`
 }
 
+// main function will be executed when this file is run
 func main() {
+
+	// gin framework for REST API
 	r := gin.Default()
+
+	// API endpoints
 	r.POST("/api/v2/order", PostOrder)
 	r.GET("/api/v2/list", GetOrder)
 	r.POST("/api/v2/match-order", PostMatchOrder)
-	r.Run("localhost:89")
+
+	// API will run at mentioned address
+	r.Run("188.166.32.136:90")
 }
 
+// handler function for Order Post
 func PostOrder(c *gin.Context) {
 	var newOrder Order
 
@@ -49,12 +67,14 @@ func PostOrder(c *gin.Context) {
 
 	published := false
 
+	// get kafka tcp connection -> broker address, topic name and kafka partition
 	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", "order", 0)
 	if err != nil {
 		fmt.Printf("failed to dial leader: %s\n", err)
 	}
 
 	if conn != nil {
+		// convert newOrder object to json string before publish message
 		msg, _ := json.Marshal(newOrder)
 		if msg != nil {
 			_, err = conn.WriteMessages(
@@ -78,6 +98,7 @@ func PostOrder(c *gin.Context) {
 
 }
 
+// handler function for MatchOrder Post
 func PostMatchOrder(c *gin.Context) {
 	var newMatchOrder MatchedOrder
 
@@ -89,12 +110,14 @@ func PostMatchOrder(c *gin.Context) {
 
 	published := false
 
+	// get kafka tcp connection -> broker address, topic name and kafka partition
 	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:9092", "match-order", 0)
 	if err != nil {
 		fmt.Printf("failed to dial leader: %s\n", err)
 	}
 
 	if conn != nil {
+		// convert newOrder object to json string before publish message
 		msg, _ := json.Marshal(newMatchOrder)
 		if msg != nil {
 			_, err = conn.WriteMessages(
@@ -118,10 +141,13 @@ func PostMatchOrder(c *gin.Context) {
 
 }
 
+// handler function for Order List
 func GetOrder(c *gin.Context) {
 
+	// order list
 	orders := make([]*Order, 0)
 
+	// database connection string
 	connStr := "postgresql://micros:micro$@localhost:5432/order_db?sslmode=disable"
 
 	db, connerr := sql.Open("postgres", connStr)
@@ -136,7 +162,11 @@ func GetOrder(c *gin.Context) {
 			// handle this error better than this
 			panic(err)
 		}
+
+		// close the resultset when iteration is done
 		defer rows.Close()
+
+		// iterate each row
 		for rows.Next() {
 			var orderId string
 			var orderType string
@@ -150,15 +180,28 @@ func GetOrder(c *gin.Context) {
 				fmt.Println("No sell order with matched false available")
 			case nil:
 				fmt.Println("Sell order available with matched is false")
-				//TODO insert into list
+				var order Order
+				order.OrderId = orderId
+				order.OrderType = orderType
+				order.Amt = amt
+				order.From = from
+				order.To = to
+				order.PmtMethod = pmtMethod
+
+				orders = append(orders, &order)
+
 			default:
 				fmt.Printf("error while opening db conn %s\n", err)
 			}
 		}
+
 		// get any error encountered during iteration
 		err = rows.Err()
 		if err != nil {
 			fmt.Printf("error while fetching rows %s\n", err)
 		}
 	}
+
+	// response writer
+	c.IndentedJSON(http.StatusOK, orders)
 }
