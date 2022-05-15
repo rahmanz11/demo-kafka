@@ -60,6 +60,7 @@ type PaidOrder struct {
 }
 
 func main() {
+	// Step 1. Consume topic "matched-order"
 	// initialize kafka connection and reader
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{"localhost:9092"},
@@ -76,8 +77,6 @@ func main() {
 
 		// run infinitely and fetch messages when available
 		for {
-
-			// Step 1. Consume topic "matched-order"
 			m, err := r.FetchMessage(ctx)
 			if err != nil {
 				fmt.Printf("error in fetch msg %s\n", err)
