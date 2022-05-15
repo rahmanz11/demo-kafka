@@ -5,19 +5,23 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/segmentio/kafka-go"
 )
 
 type MatchedOrder struct {
-	OrderId     string `json:"orderId"`
-	OrderType   string `json:"orderType"`
-	Amt         int32  `json:"amt"`
-	From        string `json:"from"`
-	To          string `json:"to"`
-	PmtMethod   string `json:"pmtMethod"`
-	SellOrderId string `json:"sellOrderId"`
+	OrderId     string    `json:"orderId"`
+	Amt         int32     `json:"amt"`
+	From        string    `json:"from"`
+	To          string    `json:"to"`
+	PayWith     string    `json:"payWith"`
+	PutProceeds string    `json:"putProceeds"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"createdAt"`
+	SellOrderId string    `json:"sellOrderId"`
+	OrderType   string    `json:"orderType"`
 }
 
 func main() {
@@ -55,9 +59,9 @@ func main() {
 				fmt.Printf("error while opening db con %s\n", connerr)
 			} else {
 				newId := 0
-				sqlStatement := `INSERT INTO match_order_info (order_id, order_type, amt, _from, _to, pmt_method, sell_order_id) 
-								VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id;`
-				inserr := db.QueryRow(sqlStatement, data.OrderId, data.OrderType, data.Amt, data.From, data.To, data.PmtMethod, data.SellOrderId).Scan(&newId)
+				sqlStatement := `INSERT INTO match_order_info (receipt_id, _from, _to, fund_amt, pay_with, put_proceeds, created_at, status) 
+								VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;`
+				inserr := db.QueryRow(sqlStatement, data.OrderId, data.From, data.To, data.Amt, data.PayWith, data.PutProceeds, time.Now(), "MATCHED").Scan(&newId)
 
 				if inserr != nil {
 					fmt.Printf("error while inserting data into match_order_info table %s\n", inserr)

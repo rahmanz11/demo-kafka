@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 
 	// for printing logs
 	"fmt"
@@ -31,13 +32,16 @@ type Order struct {
 }
 
 type MatchedOrder struct {
-	OrderId     string `json:"orderId"`
-	OrderType   string `json:"orderType"`
-	Amt         int32  `json:"amt"`
-	From        string `json:"from"`
-	To          string `json:"to"`
-	PmtMethod   string `json:"pmtMethod"`
-	SellOrderId string `json:"sellOrderId"`
+	OrderId     string    `json:"orderId"`
+	Amt         int32     `json:"amt"`
+	From        string    `json:"from"`
+	To          string    `json:"to"`
+	PayWith     string    `json:"payWith"`
+	PutProceeds string    `json:"putProceeds"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"createdAt"`
+	SellOrderId string    `json:"sellOrderId"`
+	OrderType   string    `json:"orderType"`
 }
 
 // main function will be executed when this file is run

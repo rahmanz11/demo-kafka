@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/segmentio/kafka-go"
@@ -23,13 +24,16 @@ type Order struct {
 }
 
 type MatchedOrder struct {
-	OrderId     string `json:"orderId"`
-	OrderType   string `json:"orderType"`
-	Amt         int32  `json:"amt"`
-	From        string `json:"from"`
-	To          string `json:"to"`
-	PmtMethod   string `json:"pmtMethod"`
-	SellOrderId string `json:"sellOrderId"`
+	OrderId     string    `json:"orderId"`
+	Amt         int32     `json:"amt"`
+	From        string    `json:"from"`
+	To          string    `json:"to"`
+	PayWith     string    `json:"payWith"`
+	PutProceeds string    `json:"putProceeds"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"createdAt"`
+	SellOrderId string    `json:"sellOrderId"`
+	OrderType   string    `json:"orderType"`
 }
 
 func main() {
@@ -105,13 +109,14 @@ func match(data Order, db *sql.DB) bool {
 	var id int
 	var orderId string
 	var from string
+	var pmt_method string
 
 	success := false
 
-	sqlStatement := `SELECT id, order_id, _from FROM order_info WHERE order_type = $1 AND amt = $2 AND matched= $3 ORDER BY created_at DESC LIMIT 1;`
+	sqlStatement := `SELECT id, order_id, _from, pmt_method FROM order_info WHERE order_type = $1 AND amt = $2 AND matched= $3 ORDER BY created_at DESC LIMIT 1;`
 	row := db.QueryRow(sqlStatement, "sell", data.Amt, false)
 
-	switch err := row.Scan(&id, &orderId, &from); err {
+	switch err := row.Scan(&id, &orderId, &from, &pmt_method); err {
 	case sql.ErrNoRows:
 		fmt.Printf("No sell order amt matched for order-id: %s\n", data.OrderId)
 	case nil:
@@ -141,7 +146,8 @@ func match(data Order, db *sql.DB) bool {
 		matchOrder.Amt = data.Amt
 		matchOrder.From = from
 		matchOrder.To = data.To
-		matchOrder.PmtMethod = data.PmtMethod
+		matchOrder.PayWith = data.PmtMethod
+		matchOrder.PutProceeds = pmt_method
 		matchOrder.SellOrderId = orderId
 
 		body, _ := json.Marshal(&matchOrder)
