@@ -76,6 +76,8 @@ func main() {
 
 		// run infinitely and fetch messages when available
 		for {
+
+			// Step 1. Consume topic "matched-order"
 			m, err := r.FetchMessage(ctx)
 			if err != nil {
 				fmt.Printf("error in fetch msg %s\n", err)
@@ -83,6 +85,7 @@ func main() {
 			}
 
 			var data MatchedOrder
+			// Step 2. Copy the topic message into local variable
 			// unmarshal json string to type data
 			json.Unmarshal(m.Value, &data)
 
@@ -111,13 +114,13 @@ func main() {
 							fmt.Println("committed match-order message")
 						}
 
-						// send mock request
+						// Step 3. Make a request to the mock server
 						mock_response := send_mock_request(data.OrderId, data.Amt, data.PayWith, data.PutProceeds)
 
-						// publish msg to topic paid-order
+						// Step 4. Produce a new topc "paid order" that includes mock server response
 						publish_paid_order(mock_response, data, newId, db)
 
-						// update matched order record as paid
+						// Step 5. Update matched_order_db record
 						mark_matched_order_paid(newId, db)
 
 					}
@@ -139,16 +142,16 @@ func send_mock_request(receipt_id string, fund_amt int32, pay_with string, put_p
 	// save match order data in database by calling the POST API for match order
 	response, err := http.Post("https://1ea94e89-d393-4da6-a032-0c8c48faa311.mock.pstmn.io/fund", "application/json", bytes.NewBuffer(body))
 	if err != nil {
-		fmt.Printf("cannot send match-order api request %s\n", err.Error())
+		fmt.Printf("cannot send mock request %s\n", err.Error())
 	} else {
 		response_data, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			fmt.Printf("error while posting match-order to api: %s\n", err)
+			fmt.Printf("error while sending mock request: %s\n", err)
 		} else {
 			fmt.Printf("mock response data: %s\n", response_data)
 			err := json.Unmarshal(response_data, &mock_response)
 			if err != nil {
-				fmt.Printf("error in mock request %s\n", err.Error())
+				fmt.Printf("error in mock response data unmarshal %s\n", err.Error())
 			}
 		}
 	}
