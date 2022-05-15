@@ -120,7 +120,7 @@ func main() {
 						publish_paid_order(mock_response, data, newId, db)
 
 						// Step 5. Update matched_order_db record
-						mark_matched_order_paid(newId, db)
+						update_matched_order_paid(newId, db, mock_response.FundReceipt)
 
 					}
 				}
@@ -198,21 +198,38 @@ func publish_paid_order(mock_response MockResponse, matched_order MatchedOrder, 
 	return published
 }
 
-func mark_matched_order_paid(match_order_info_id int, db *sql.DB) {
-	sql_statement := `UPDATE match_order_info SET status = $1 WHERE id = $2;`
-	res, err := db.Exec(sql_statement, "PAID", match_order_info_id)
-
-	if err != nil {
-		fmt.Printf("error while updating match order info record %s\n", err)
+func update_matched_order_paid(match_order_info_id int, db *sql.DB, fund_receipt FundReceipt) {
+	if fund_receipt.FundReceiptId != "" {
+		sql_statement := `UPDATE match_order_info SET status = $1, fund_receipt_id = $2, transaction_type = $3, currency_code = $4, curreyncy_name = $5, paid_at = $6 WHERE id = $7;`
+		res, err := db.Exec(sql_statement, "PAID", fund_receipt.FundReceiptId, fund_receipt.TransactionType, fund_receipt.CurrencyCode, fund_receipt.CurrenyName, time.Now(), match_order_info_id)
+		if err != nil {
+			fmt.Printf("error while updating match order info record-1 %s\n", err)
+		} else {
+			fmt.Println("match order info record updated, id-1:")
+			fmt.Println(match_order_info_id)
+		}
+		count, err := res.RowsAffected()
+		if err != nil {
+			fmt.Printf("error while getting information of match order info rows updated-1 %s\n", err)
+		} else {
+			fmt.Printf("no. of match order info rows updated are-1:")
+			fmt.Println(count)
+		}
 	} else {
-		fmt.Println("match order info record updated, id:")
-		fmt.Println(match_order_info_id)
-	}
-	count, err := res.RowsAffected()
-	if err != nil {
-		fmt.Printf("error while getting information of match order info rows updated %s\n", err)
-	} else {
-		fmt.Printf("no. of match order info rows updated are:")
-		fmt.Println(count)
+		sql_statement := `UPDATE match_order_info SET status = $1, paid_at = $2 WHERE id = $3;`
+		res, err := db.Exec(sql_statement, "PAID", time.Now(), match_order_info_id)
+		if err != nil {
+			fmt.Printf("error while updating match order info record-2 %s\n", err)
+		} else {
+			fmt.Println("match order info record updated, id-2:")
+			fmt.Println(match_order_info_id)
+		}
+		count, err := res.RowsAffected()
+		if err != nil {
+			fmt.Printf("error while getting information of match order info rows updated-2 %s\n", err)
+		} else {
+			fmt.Printf("no. of match order info rows updated are-2:")
+			fmt.Println(count)
+		}
 	}
 }
