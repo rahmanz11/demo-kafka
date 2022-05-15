@@ -64,8 +64,8 @@ func main() {
 	// initialize kafka connection and reader
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{"localhost:9092"},
-		GroupID:   "matched-order-group",
-		Topic:     "matched-order",
+		GroupID:   "pay-match-order-group",
+		Topic:     "match-order",
 		Partition: 0,
 		MinBytes:  10e3, // 10KB
 		MaxBytes:  10e6, // 10MB
